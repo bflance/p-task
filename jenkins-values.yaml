@@ -1,0 +1,60 @@
+controller: 
+  admin:
+    username: "admin"
+    password: "admin"
+  healthProbes: false
+  ingress:
+    enabled: true
+    hostName: jenkins.local
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/rewrite-target: /
+    hosts:
+      - name: jenkins.local
+        path: /
+        pathType: ImplementationSpecific
+  containerEnv:
+    - name: CASC_JENKINS_CONFIG
+      value: /var/jenkins_home/casc_configs/jenkins.yaml
+  installPlugins:
+    - kubernetes:latest
+    - workflow-aggregator:latest
+    - git:latest
+    - configuration-as-code:latest
+    - job-dsl:latest
+  sidecars:
+    configAutoReload:
+      enabled: true
+  JCasC:
+    defaultConfig: true
+    configScripts: 
+      welcome-message: |
+        jenkins:
+          systemMessage: This is an updated System Message via JCasC.
+        jobs:
+          - script: >
+             pipelineJob('test-job') {
+               definition {
+                 cps {
+                   script('''
+                      pipeline {
+                            agent any
+                            stages {
+                                stage('Stage 1') {
+                                    steps {
+                                        echo 'logic'
+                                    }
+                                }
+                                stage('Stage 2') {
+                                    steps {
+                                        echo 'logic'
+                                    }
+                                }
+                            }
+                      }
+                    '''.stripIndent())
+                    sandbox()     
+                  }
+                }
+              }
